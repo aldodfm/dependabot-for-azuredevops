@@ -337,7 +337,7 @@ class AzureProcessor
   #############
 
   def get(url)
-    # puts "get -> #{url}"
+    #puts "get -> #{url}"
 
     response = Excon.get(
       url,
@@ -349,95 +349,103 @@ class AzureProcessor
     raise Unathorized if response.status == 401
     raise NotFound if response.status == 404
 
-    # puts " -> (#{response.status}) #{response.body}"
+     #puts " -> (#{response.status}) #{response.body}"
 
     response
   end
 
   def post(url, json)
-    # puts "post -> #{url}"
+    #puts "post -> #{url}"
 
     response = Excon.post(
       url,
-      headers: {
-        'Content-Type' => 'application/json'
-      },
       body: json,
       user: @organisation_credentials&.fetch('username'),
       password: @organisation_credentials&.fetch('password'),
       idempotent: true,
-      **Dependabot::SharedHelpers.excon_defaults
+      **Dependabot::SharedHelpers.excon_defaults(
+        headers: 
+          {
+            "Content-Type" => "application/json"
+          }
+      )
     )
     raise Unathorized if response.status == 401
     raise NotFound if response.status == 404
 
-    # puts " -> (#{response.status}) #{response.body}"
+     #puts " -> (#{response.status}) #{response.body}"
 
     response
   end
 
   def post_patch(url, json)
-    # puts "post_patch -> #{url}"
+     #puts "post_patch -> #{url}"
 
     response = Excon.post(
       url,
-      headers: {
-        'Content-Type' => 'application/json-patch+json'
-      },
       body: json,
       user: @organisation_credentials&.fetch('username'),
       password: @organisation_credentials&.fetch('password'),
       idempotent: true,
-      **Dependabot::SharedHelpers.excon_defaults
+      **Dependabot::SharedHelpers.excon_defaults(
+        headers: 
+          {
+            "Content-Type" => "application/json-patch+json"
+          }
+      )
     )
     raise Unathorized if response.status == 401
     raise NotFound if response.status == 404
 
-    # puts " -> (#{response.status}) #{response.body}"
+     #puts " -> (#{response.status}) #{response.body}"
 
     response
   end
 
   def patch(url, json)
-    # puts "patch -> #{url}"
+     #puts "patch -> #{url}"
 
     response = Excon.patch(
       url,
-      headers: {
-        'Content-Type' => 'application/json'
-      },
       body: json,
       user: @organisation_credentials&.fetch('username'),
       password: @organisation_credentials&.fetch('password'),
       idempotent: true,
-      **Dependabot::SharedHelpers.excon_defaults
+      **Dependabot::SharedHelpers.excon_defaults(
+        headers: 
+          {
+            "Content-Type" => "application/json"
+          }
+      )
     )
     raise Unathorized if response.status == 401
     raise NotFound if response.status == 404
 
-    # puts " -> (#{response.status}) #{response.body}"
+     #puts " -> (#{response.status}) #{response.body}"
 
     response
   end
 
   def put(url, json)
-    # puts "put -> #{url}"
+     #puts "put -> #{url}"
 
     response = Excon.put(
       url,
-      headers: {
-        'Content-Type' => 'application/json'
-      },
       body: json,
       user: @organisation_credentials&.fetch('username'),
       password: @organisation_credentials&.fetch('password'),
       idempotent: true,
-      **Dependabot::SharedHelpers.excon_defaults
+      **Dependabot::SharedHelpers.excon_defaults(
+        headers: 
+          {
+            "Content-Type" => "application/json"
+          }
+      )
     )
     raise Unathorized if response.status == 401
     raise NotFound if response.status == 404
 
-    # puts " -> (#{response.status}) #{response.body}"
+     #puts " -> (#{response.status}) #{response.body}"
 
     response
   end
