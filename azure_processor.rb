@@ -6,9 +6,10 @@ class AzureProcessor
   class Unathorized < StandardError; end
   class NotFound < StandardError; end
 
-  def initialize(organisation, available_credentials)
+  def initialize(organisation, available_credentials, projects_filter)
     @organisation = organisation
     @available_credentials = available_credentials
+    @filter = projects_filter
 
     @api_endpoint = "https://dev.azure.com/#{organisation}"
     @organisation_credentials = available_credentials
@@ -19,7 +20,7 @@ class AzureProcessor
   def process
     puts "#{@organisation} => Fetch projects..."
 
-    response = get("#{@api_endpoint}/_apis/projects")
+    response = get("#{@api_endpoint}/_apis/projects?stateFilter=All&`$top=1000&`$skip=0")
     JSON.parse(response.body)
         .fetch('value')
         .map do |project|
@@ -28,7 +29,9 @@ class AzureProcessor
             name: project.fetch('name')
           }
         end
+        .select { |project| project[:name].include? ("#{@filter}") }
         .each { |project| process_project(project) }
+        
   end
 
   def process_project(project)
