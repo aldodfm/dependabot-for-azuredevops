@@ -20,7 +20,7 @@ class AzureProcessor
   def process
     puts "#{@organisation} => Fetch projects..."
 
-    response = get("#{@api_endpoint}/_apis/projects?stateFilter=All&`$top=1000&`$skip=0")
+    response = get("#{@api_endpoint}/_apis/projects?stateFilter=All&$top=1000&$skip=0")
     JSON.parse(response.body)
         .fetch('value')
         .map do |project|
@@ -51,7 +51,7 @@ class AzureProcessor
 
   def process_repo(project, repo)
     begin
-      puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Checking for Depenadbot configuration file..."
+      puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Checking for Dependabot configuration file..."
 
       response_config = get("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/items?path=.dependabot/config.yml")
       config = YAML.safe_load(response_config.body)
@@ -62,21 +62,21 @@ class AzureProcessor
       generate_bug_dependabotconfig(project, repo)
     end
 
-    begin
-      puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Checking for Azure Pipeline configuration file..."
+    #begin
+    #  puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Checking for Azure Pipeline configuration file..."
 
-      get("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/items?path=azure-pipelines.yml")
-    rescue NotFound
-      generate_bug_azurepipeline(project, repo)
-    end
+    #  get("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/items?path=azure-pipelines.yml")
+    #rescue NotFound
+    #  generate_bug_azurepipeline(project, repo)
+    #end
   end
 
   def generate_bug_dependabotconfig(project, repo)
-    puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Depenadbot configuration file does not exist, raising bug if required..."
+    puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => Dependabot configuration file does not exist, raising PBI if required..."
 
     bug_title = "[#{repo[:name]}] Configure Dependabot"
     query = { query: "Select [System.Id] From WorkItems Where [System.Title] = '#{bug_title}'" }
-    find = post("#{@api_endpoint}/#{project[:id]}/_apis/wit/wiql?api-version=5.0", query.to_json)
+    find = post("#{@api_endpoint}/#{project[:id]}/_apis/wit/wiql?api-version=6.0", query.to_json)
     unless JSON.parse(find.body).fetch('workItems').any?
       content = [
         {
@@ -93,26 +93,14 @@ class AzureProcessor
         },
         {
           op: 'add',
-          path: '/fields/Microsoft.VSTS.TCM.ReproSteps',
+          path: '/fields/System.Description',
           from: '',
           value: "Please add `.dependabot/config.yml` to the default branch of the `#{repo[:name]}` repo." \
                   '<p>This will automatically configure the Dependabot service to provide dependency updates.</p>' \
                   '<p>See <a href="https://dependabot.com/docs/config-file">https://dependabot.com/docs/config-file</a> for more information.</p>'
-        },
-        {
-          op: 'add',
-          path: '/fields/Microsoft.VSTS.Common.Priority',
-          from: '',
-          value: '1'
-        },
-        {
-          op: 'add',
-          path: '/fields/Microsoft.VSTS.Common.Severity',
-          from: '',
-          value: '1 - Critical'
         }
       ]
-      post_patch("#{@api_endpoint}/#{project[:id]}/_apis/wit/workitems/$Bug?api-version=5.0", content.to_json)
+      post_patch("#{@api_endpoint}/#{project[:id]}/_apis/wit/workitems/$Product%20Backlog%20Item?api-version=6.0", content.to_json)
     end
   end
 
@@ -121,7 +109,7 @@ class AzureProcessor
 
     bug_title = "[#{repo[:name]}] Configure Azure Pipeline"
     query = { query: "Select [System.Id] From WorkItems Where [System.Title] = '#{bug_title}'" }
-    find = post("#{@api_endpoint}/#{project[:id]}/_apis/wit/wiql?api-version=5.0", query.to_json)
+    find = post("#{@api_endpoint}/#{project[:id]}/_apis/wit/wiql?api-version=6.0", query.to_json)
     unless JSON.parse(find.body).fetch('workItems').any?
       content = [
         {
@@ -155,7 +143,7 @@ class AzureProcessor
           value: '1 - Critical'
         }
       ]
-      post_patch("#{@api_endpoint}/#{project[:id]}/_apis/wit/workitems/$Bug?api-version=5.0", content.to_json)
+      post_patch("#{@api_endpoint}/#{project[:id]}/_apis/wit/workitems/$Bug?api-version=6.0", content.to_json)
     end
   end
 
@@ -312,11 +300,11 @@ class AzureProcessor
             deleteSourceBranch: 'true'
           }
         }
-        patch("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/pullrequests/#{pull_request_id}?api-version=5.0", content.to_json)
+        patch("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/pullrequests/#{pull_request_id}?api-version=6.0", content.to_json)
 
         puts "#{@organisation} => #{project[:name]} => #{repo[:name]} => #{package_manager} => #{dep.name} (#{dep.version}) => Adding automatic approval by #{creator_id}..."
         content = { vote: 10 }
-        put("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/pullrequests/#{pull_request_id}/reviewers/#{creator_id}?api-version=5.0", content.to_json)
+        put("#{@api_endpoint}/#{project[:id]}/_apis/git/repositories/#{repo[:id]}/pullrequests/#{pull_request_id}/reviewers/#{creator_id}?api-version=6.0", content.to_json)
       end
     end
   rescue StandardError => e
