@@ -1,7 +1,10 @@
 pool:
   name: Hosted Ubuntu 1604
 
-trigger: none
+trigger:
+  branches:
+    include:
+    - master
 
 pr: none
 
